@@ -26,5 +26,7 @@ delete_option( 'skml_doi_db_version' );
 wp_clear_scheduled_hook( 'skml_doi_daily' );
 
 global $wpdb;
-$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}diviskit_optin_subscribers" );
-$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}skml_subscribers" );
+// phpcs:disable WordPress.DB.DirectDatabaseQuery -- uninstall intentionally drops the plugin tables.
+$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $wpdb->prefix . 'diviskit_optin_subscribers' ) );
+$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $wpdb->prefix . 'skml_subscribers' ) );
+// phpcs:enable WordPress.DB.DirectDatabaseQuery

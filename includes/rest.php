@@ -167,6 +167,7 @@ function dkopt_rest_confirm( WP_REST_Request $req ) {
 
     if ( strtotime( $row['expires_at'] ) < current_time( 'timestamp' ) ) {
         global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- custom table, single-row status update.
         $wpdb->update( dkopt_table(), array( 'status' => 'expired', 'token_hash' => '' ), array( 'id' => (int) $row['id'] ) );
         wp_safe_redirect( $err_url );
         exit;

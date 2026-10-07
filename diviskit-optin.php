@@ -8,7 +8,7 @@
  * Author URI: https://diviskit.com
  * License: GPLv2 or later
  * Text Domain: diviskit-optin
- * Requires at least: 6.0
+ * Requires at least: 6.2
  * Requires PHP: 7.4
  */
 
@@ -46,14 +46,6 @@ require_once DIVISKIT_OPTIN_PATH . 'includes/form.php';
 if ( is_admin() ) {
     require_once DIVISKIT_OPTIN_PATH . 'includes/admin.php';
 }
-
-/**
- * Plugin text domain.
- */
-function dkopt_load_textdomain() {
-    load_plugin_textdomain( 'diviskit-optin', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
-}
-add_action( 'init', 'dkopt_load_textdomain' );
 
 /**
  * On activation: create the subscriber table, seed the templates option
@@ -111,16 +103,18 @@ function dkopt_migrate_from_skml() {
     global $wpdb;
     $old_table = $wpdb->prefix . 'skml_subscribers';
     $new_table = dkopt_table();
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery -- one-time schema migration, no WP API equivalent.
     if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $old_table ) ) === $old_table ) {
         if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $new_table ) ) !== $new_table ) {
-            $wpdb->query( "RENAME TABLE {$old_table} TO {$new_table}" );
+            $wpdb->query( $wpdb->prepare( 'RENAME TABLE %i TO %i', $old_table, $new_table ) );
         } else {
             // Both exist (e.g. new table created before migration ran):
             // merge rows by PK/email uniqueness, then drop the old table.
-            $wpdb->query( "INSERT IGNORE INTO {$new_table} SELECT * FROM {$old_table}" );
-            $wpdb->query( "DROP TABLE {$old_table}" );
+            $wpdb->query( $wpdb->prepare( 'INSERT IGNORE INTO %i SELECT * FROM %i', $new_table, $old_table ) );
+            $wpdb->query( $wpdb->prepare( 'DROP TABLE %i', $old_table ) );
         }
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery
 
     if ( wp_next_scheduled( 'skml_doi_daily' ) ) {
         wp_clear_scheduled_hook( 'skml_doi_daily' );

@@ -118,6 +118,7 @@ function dkopt_admin_page() {
         'templates'   => 'Mail-Templates',
         'settings'    => 'Einstellungen',
     );
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only tab switch, no mutation.
     $tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'subscribers';
     if ( ! isset( $tabs[ $tab ] ) ) {
         $tab = 'subscribers';
@@ -353,7 +354,9 @@ function dkopt_tpl_action_url( $action, $id ) {
 }
 
 function dkopt_admin_templates_tab() {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only view selection; mutations go through admin-post.php with nonces.
     $action = isset( $_GET['action'] ) ? sanitize_key( wp_unslash( $_GET['action'] ) ) : '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only view selection; mutations go through admin-post.php with nonces.
     $id     = isset( $_GET['template'] ) ? sanitize_key( wp_unslash( $_GET['template'] ) ) : '';
 
     if ( 'edit' === $action || 'new' === $action ) {
@@ -370,6 +373,7 @@ function dkopt_admin_templates_list() {
     if ( ! isset( $templates[ $active ] ) ) {
         $active = 'default';
     }
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- displays a notice slug from a redirect; value is whitelisted below.
     $notice  = isset( $_GET['dkopt_notice'] ) ? sanitize_key( wp_unslash( $_GET['dkopt_notice'] ) ) : '';
     $notices = array(
         'saved'      => array( 'success', 'Template gespeichert.' ),
@@ -443,6 +447,7 @@ function dkopt_admin_template_edit( $id ) {
         exit;
     }
 
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- displays an error message from a redirect; escaped on output.
     $err = isset( $_GET['dkopt_error'] ) ? sanitize_text_field( wp_unslash( $_GET['dkopt_error'] ) ) : '';
     ?>
     <section class="diviskit-card">
@@ -507,6 +512,7 @@ function dkopt_tpl_error_redirect( $id, WP_Error $err ) {
 }
 
 function dkopt_tpl_request_id() {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- nonce is verified in dkopt_tpl_guard/dkopt_handle_tpl_save after this lookup.
     return isset( $_REQUEST['template'] ) ? sanitize_key( wp_unslash( $_REQUEST['template'] ) ) : '';
 }
 
@@ -524,7 +530,8 @@ function dkopt_handle_tpl_save() {
     check_admin_referer( 'dkopt_tpl_save' );
 
     $id   = isset( $_POST['tpl_id'] ) ? sanitize_key( wp_unslash( $_POST['tpl_id'] ) ) : '';
-    $name = isset( $_POST['tpl_name'] ) ? wp_unslash( $_POST['tpl_name'] ) : '';
+    $name = isset( $_POST['tpl_name'] ) ? sanitize_text_field( wp_unslash( $_POST['tpl_name'] ) ) : '';
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- raw HTML mail template; admins only (manage_options) and validated for {{confirm_url}} in dkopt_save_template.
     $html = isset( $_POST['tpl_html'] ) ? wp_unslash( $_POST['tpl_html'] ) : '';
 
     $result = dkopt_save_template( $id, $name, $html );
@@ -631,8 +638,12 @@ function dkopt_export_csv() {
 
     global $wpdb;
     $table = dkopt_table();
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- custom table, admin-only export.
     $rows  = $wpdb->get_results(
-        "SELECT email, status, consent_text, ip_address, user_agent, created_at, confirmed_at, ml_synced_at, interests FROM {$table} ORDER BY created_at DESC",
+        $wpdb->prepare(
+            "SELECT email, status, consent_text, ip_address, user_agent, created_at, confirmed_at, ml_synced_at, interests FROM %i ORDER BY created_at DESC",
+            $table
+        ),
         ARRAY_A
     );
 
@@ -640,12 +651,15 @@ function dkopt_export_csv() {
     header( 'Content-Type: text/csv; charset=utf-8' );
     header( 'Content-Disposition: attachment; filename="diviskit-optin-subscribers-' . gmdate( 'Y-m-d' ) . '.csv"' );
 
-    $out = fopen( 'php://output', 'w' );
-    fputcsv( $out, array( 'email', 'status', 'consent_text', 'ip_address', 'user_agent', 'created_at', 'confirmed_at', 'ml_synced_at', 'interests' ) );
+    $csv_cell = static function ( $val ) {
+        return '"' . str_replace( '"', '""', (string) $val ) . '"';
+    };
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- CSV download, cells are quoted above.
+    echo implode( ',', array_map( $csv_cell, array( 'email', 'status', 'consent_text', 'ip_address', 'user_agent', 'created_at', 'confirmed_at', 'ml_synced_at', 'interests' ) ) ), "\r\n";
     foreach ( $rows as $row ) {
-        fputcsv( $out, $row );
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- CSV download, cells are quoted above.
+        echo implode( ',', array_map( $csv_cell, array_values( $row ) ) ), "\r\n";
     }
-    fclose( $out );
     exit;
 }
 add_action( 'admin_post_dkopt_export', 'dkopt_export_csv' );

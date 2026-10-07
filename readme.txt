@@ -1,16 +1,14 @@
 === Diviskit Optin ===
 Contributors: diviskit
 Tags: newsletter, gdpr, double opt-in, email
-Requires at least: 6.0
+Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
 Stable tag: 0.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Your own double opt-in for newsletter signups: branded confirmation mails
-from fully editable templates, GDPR consent proof, provider of your choice —
-MailerLite, Brevo or any webhook. Free, GPL, no account needed.
+Branded double-opt-in confirmation mails, GDPR consent proof, MailerLite/Brevo/webhook sync. Free, GPL, no account needed.
 
 == Description ==
 

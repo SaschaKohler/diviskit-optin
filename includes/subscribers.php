@@ -12,6 +12,8 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery -- custom DOI table; WP has no CRUD API for custom tables.
+
 function dkopt_table() {
     global $wpdb;
     return $wpdb->prefix . 'diviskit_optin_subscribers';
@@ -55,7 +57,7 @@ function dkopt_find_by_email( $email ) {
     global $wpdb;
     $table = dkopt_table();
     return $wpdb->get_row( $wpdb->prepare(
-        "SELECT * FROM {$table} WHERE email = %s", $email
+        "SELECT * FROM %i WHERE email = %s", $table, $email
     ), ARRAY_A );
 }
 
@@ -63,7 +65,7 @@ function dkopt_find_by_token( $token ) {
     global $wpdb;
     $table = dkopt_table();
     return $wpdb->get_row( $wpdb->prepare(
-        "SELECT * FROM {$table} WHERE token_hash = %s", hash( 'sha256', $token )
+        "SELECT * FROM %i WHERE token_hash = %s", $table, hash( 'sha256', $token )
     ), ARRAY_A );
 }
 
@@ -131,8 +133,8 @@ function dkopt_expire_pending() {
         return;
     }
     $wpdb->query( $wpdb->prepare(
-        "UPDATE {$table} SET status = 'expired', token_hash = '' WHERE status = 'pending' AND expires_at < %s",
-        current_time( 'mysql' )
+        "UPDATE %i SET status = 'expired', token_hash = '' WHERE status = 'pending' AND expires_at < %s",
+        $table, current_time( 'mysql' )
     ) );
 }
 
@@ -148,9 +150,10 @@ function dkopt_retry_provider_sync() {
         return;
     }
     $rows = $wpdb->get_results( $wpdb->prepare(
-        "SELECT id, email, interests FROM {$table}
+        "SELECT id, email, interests FROM %i
          WHERE status = 'confirmed' AND ml_synced_at IS NULL AND confirmed_at > %s
          LIMIT 20",
+        $table,
         gmdate( 'Y-m-d H:i:s', current_time( 'timestamp' ) - 7 * DAY_IN_SECONDS )
     ), ARRAY_A );
 
@@ -167,7 +170,9 @@ function dkopt_subscriber_counts() {
     if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
         return $empty;
     }
-    $rows  = $wpdb->get_results( "SELECT status, COUNT(*) AS n FROM {$table} GROUP BY status", ARRAY_A );
+    $rows  = $wpdb->get_results( $wpdb->prepare(
+        "SELECT status, COUNT(*) AS n FROM %i GROUP BY status", $table
+    ), ARRAY_A );
     $counts = $empty;
     foreach ( $rows as $row ) {
         if ( isset( $counts[ $row['status'] ] ) ) {
@@ -185,6 +190,7 @@ function dkopt_subscriber_entries( $limit = 100 ) {
     }
     return $wpdb->get_results( $wpdb->prepare(
         "SELECT id, email, status, consent_text, ip_address, created_at, confirmed_at, ml_synced_at, ml_error, interests
-         FROM {$table} ORDER BY created_at DESC LIMIT %d", (int) $limit
+         FROM %i ORDER BY created_at DESC LIMIT %d", $table, (int) $limit
     ), ARRAY_A );
 }
+// phpcs:enable WordPress.DB.DirectDatabaseQuery
