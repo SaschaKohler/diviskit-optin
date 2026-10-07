@@ -1,6 +1,6 @@
 === Diviskit Optin ===
 Contributors: diviskit
-Tags: newsletter, gdpr, double opt-in, mailerlite, email
+Tags: newsletter, gdpr, double opt-in, email
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
