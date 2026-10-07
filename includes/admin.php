@@ -275,18 +275,26 @@ function dkopt_admin_settings_tab() {
         <table class="form-table" role="presentation">
           <tr><th scope="row">Checkboxen aktiv</th><td>
             <label><input type="checkbox" name="<?php echo esc_attr( DIVISKIT_OPTIN_OPTION ); ?>[interests_enabled]" value="1" <?php checked( ! empty( $o['interests_enabled'] ) ); ?>>
-              Optionale Produkt-Checkboxen im Formular zeigen</label>
+              Optionale Interessen-Checkboxen im Formular zeigen</label>
           </td></tr>
           <tr><th scope="row">Zwischenüberschrift</th><td><?php dkopt_field( 'interests_heading', 'text', 'Wofür interessierst du dich? (optional)' ); ?></td></tr>
-          <?php foreach ( dkopt_interest_registry() as $slug => $keys ) : ?>
-            <tr>
-              <th scope="row">Interesse „<?php echo esc_html( $slug ); ?>“</th>
-              <td>
-                <?php dkopt_field( $keys['label_key'], 'text', 'Label (leer = ausblenden)' ); ?>
-                &nbsp;ML-Group-ID:&nbsp;<?php dkopt_field( $keys['group_key'], 'text', 'optional', 'MailerLite-Group-ID — bestätigte Subscriber mit diesem Interesse werden zusätzlich in diese Gruppe geschrieben.' ); ?>
-              </td>
-            </tr>
-          <?php endforeach; ?>
+          <tr>
+            <th scope="row">Interessen</th>
+            <td>
+              <div id="dkopt-interests" data-option="<?php echo esc_attr( DIVISKIT_OPTIN_OPTION ); ?>">
+                <?php foreach ( (array) $o['interests'] as $i => $it ) : ?>
+                  <div class="dkopt-int-row">
+                    <input type="hidden" name="<?php echo esc_attr( DIVISKIT_OPTIN_OPTION ); ?>[interests][<?php echo (int) $i; ?>][slug]" value="<?php echo esc_attr( $it['slug'] ); ?>">
+                    <input type="text" name="<?php echo esc_attr( DIVISKIT_OPTIN_OPTION ); ?>[interests][<?php echo (int) $i; ?>][label]" value="<?php echo esc_attr( $it['label'] ); ?>" placeholder="Label" class="regular-text">
+                    <input type="text" name="<?php echo esc_attr( DIVISKIT_OPTIN_OPTION ); ?>[interests][<?php echo (int) $i; ?>][group]" value="<?php echo esc_attr( $it['group'] ); ?>" placeholder="ML-Group-ID (optional)" class="regular-text">
+                    <button type="button" class="button dkopt-int-del" title="Entfernen">−</button>
+                  </div>
+                <?php endforeach; ?>
+              </div>
+              <p><button type="button" class="button" id="dkopt-int-add">+ Interesse hinzufügen</button></p>
+              <p class="description">Pro Zeile eine optionale Checkbox im Formular. Die ML-Group-ID ist MailerLite-spezifisch: bestätigte Subscriber mit diesem Interesse werden zusätzlich in diese Gruppe geschrieben. Beim Webhook-Provider gehen gewählte Interessen als Slug-Liste mit.</p>
+            </td>
+          </tr>
         </table>
       </section>
 

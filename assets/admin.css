@@ -35,6 +35,21 @@
   padding: 6px 0;
 }
 
+/* --- interests repeater ------------------------------------------- */
+.diviskit-admin .dkopt-int-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.diviskit-admin .dkopt-int-row .regular-text {
+  flex: 0 1 280px;
+}
+.diviskit-admin .dkopt-int-del {
+  flex: 0 0 auto;
+  line-height: 1;
+}
+
 @media (max-width: 1100px) {
   .diviskit-admin .dkopt-editor-grid { grid-template-columns: minmax(0, 1fr); }
   .diviskit-admin .dkopt-preview { position: static; }

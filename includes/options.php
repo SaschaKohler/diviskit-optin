@@ -26,17 +26,12 @@ function dkopt_defaults() {
         // Einwilligung (wording is stored per signup as legal proof)
         'consent_text'         => 'Ich möchte News und Updates per E-Mail erhalten. Mit dem Absenden bestätige ich, dass meine Angaben gemäß der Datenschutzerklärung verarbeitet werden.',
 
-        // Optionale Produkt-Interessen (Checkboxen über der Consent-Zeile).
-        // Label leer = Interesse wird nicht angezeigt. group = optionale
+        // Optionale Interessen (Checkboxen über der Consent-Zeile), frei
+        // editierbar: [{slug, label, group}] — group = optionale
         // MailerLite-Group-ID, die bestätigte Subscriber zusätzlich bekommen.
         'interests_enabled'    => 1,
         'interests_heading'    => 'Wofür interessierst du dich? (optional)',
-        'int_sk_consent_label' => 'Diviskit Consent — Cookie-Consent für WordPress',
-        'int_sk_consent_group' => '',
-        'int_vendokit_label'   => 'Vendokit — Lizenz-Verkauf für WP-Produkte',
-        'int_vendokit_group'   => '',
-        'int_agent_label'      => 'Diviskit Agent — MCP für Divi 5',
-        'int_agent_group'      => '',
+        'interests'            => array(),
 
         // Formular-Texte
         'form_heading'         => 'Newsletter',
@@ -71,8 +66,41 @@ function dkopt_defaults() {
     );
 }
 
+/**
+ * Legacy interest field map (<=0.5.0): fixed slug => option keys.
+ */
+function dkopt_legacy_interest_keys() {
+    return array(
+        'sk_consent' => array( 'label_key' => 'int_sk_consent_label', 'group_key' => 'int_sk_consent_group' ),
+        'vendokit'   => array( 'label_key' => 'int_vendokit_label',   'group_key' => 'int_vendokit_group' ),
+        'agent'      => array( 'label_key' => 'int_agent_label',      'group_key' => 'int_agent_group' ),
+    );
+}
+
 function dkopt_options() {
-    return wp_parse_args( get_option( DIVISKIT_OPTIN_OPTION, array() ), dkopt_defaults() );
+    $stored = get_option( DIVISKIT_OPTIN_OPTION, array() );
+    $o      = wp_parse_args( $stored, dkopt_defaults() );
+
+    // Migration <=0.5.0: feste int_*-Felder → interests-Liste.
+    if ( ! isset( $stored['interests'] ) ) {
+        $migrated = array();
+        foreach ( dkopt_legacy_interest_keys() as $slug => $keys ) {
+            $label = trim( (string) ( isset( $o[ $keys['label_key'] ] ) ? $o[ $keys['label_key'] ] : '' ) );
+            if ( '' === $label ) {
+                continue;
+            }
+            $migrated[] = array(
+                'slug'  => $slug,
+                'label' => $label,
+                'group' => trim( (string) ( isset( $o[ $keys['group_key'] ] ) ? $o[ $keys['group_key'] ] : '' ) ),
+            );
+        }
+        $o['interests'] = $migrated;
+        foreach ( dkopt_legacy_interest_keys() as $keys ) {
+            unset( $o[ $keys['label_key'] ], $o[ $keys['group_key'] ] );
+        }
+    }
+    return $o;
 }
 
 function dkopt_opt( $key ) {
@@ -92,32 +120,29 @@ function dkopt_recaptcha_active() {
 }
 
 /**
- * Interessen-Registry: slug => label + optionale Provider-Group-ID.
+ * Interessen-Liste: slug => label + optionale Provider-Group-ID.
  * Nur Einträge mit nicht-leerem Label werden im Formular gezeigt und
  * serverseitig akzeptiert.
- */
-function dkopt_interest_registry() {
-    return array(
-        'sk_consent' => array( 'label_key' => 'int_sk_consent_label', 'group_key' => 'int_sk_consent_group' ),
-        'vendokit'   => array( 'label_key' => 'int_vendokit_label',   'group_key' => 'int_vendokit_group' ),
-        'agent'      => array( 'label_key' => 'int_agent_label',      'group_key' => 'int_agent_group' ),
-    );
-}
-
-/**
+ *
  * @return array slug => array( 'label' => string, 'group' => string )
  */
 function dkopt_interests() {
-    $o   = dkopt_options();
     $out = array();
-    foreach ( dkopt_interest_registry() as $slug => $keys ) {
-        $label = trim( (string) $o[ $keys['label_key'] ] );
+    foreach ( (array) dkopt_opt( 'interests' ) as $it ) {
+        if ( ! is_array( $it ) ) {
+            continue;
+        }
+        $label = trim( (string) ( isset( $it['label'] ) ? $it['label'] : '' ) );
         if ( '' === $label ) {
             continue;
         }
+        $slug = sanitize_key( isset( $it['slug'] ) ? $it['slug'] : '' );
+        if ( '' === $slug ) {
+            $slug = sanitize_key( $label );
+        }
         $out[ $slug ] = array(
             'label' => $label,
-            'group' => trim( (string) $o[ $keys['group_key'] ] ),
+            'group' => trim( (string) ( isset( $it['group'] ) ? $it['group'] : '' ) ),
         );
     }
     return $out;
@@ -162,9 +187,6 @@ function dkopt_sanitize_options( $in ) {
         'form_success', 'form_success_heading',
         'mail_subject', 'mail_heading', 'mail_intro', 'mail_button', 'mail_footer',
         'interests_heading',
-        'int_sk_consent_label', 'int_sk_consent_group',
-        'int_vendokit_label', 'int_vendokit_group',
-        'int_agent_label', 'int_agent_group',
     );
     foreach ( $text_keys as $key ) {
         if ( isset( $in[ $key ] ) ) {
@@ -184,6 +206,31 @@ function dkopt_sanitize_options( $in ) {
         if ( isset( $in[ $key ] ) ) {
             $out[ $key ] = esc_url_raw( trim( $in[ $key ] ) );
         }
+    }
+
+    // Interessen-Repeater: [{slug?, label, group?}] — Slug fehlt →
+    // wird aus dem Label abgeleitet; gleiche Slugs werden dedupliziert.
+    if ( isset( $in['interests'] ) && is_array( $in['interests'] ) ) {
+        $list = array();
+        foreach ( $in['interests'] as $it ) {
+            if ( ! is_array( $it ) ) {
+                continue;
+            }
+            $label = isset( $it['label'] ) ? sanitize_text_field( $it['label'] ) : '';
+            if ( '' === trim( $label ) ) {
+                continue;
+            }
+            $slug = isset( $it['slug'] ) ? sanitize_key( $it['slug'] ) : '';
+            if ( '' === $slug ) {
+                $slug = sanitize_key( $label );
+            }
+            $group         = isset( $it['group'] ) ? sanitize_text_field( $it['group'] ) : '';
+            $list[ $slug ] = array( 'slug' => $slug, 'label' => $label, 'group' => $group );
+            if ( count( $list ) >= 20 ) {
+                break;
+            }
+        }
+        $out['interests'] = array_values( $list );
     }
 
     $out['recaptcha_enabled'] = empty( $in['recaptcha_enabled'] ) ? 0 : 1;

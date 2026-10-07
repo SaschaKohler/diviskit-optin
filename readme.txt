@@ -4,7 +4,7 @@ Tags: newsletter, gdpr, double opt-in, mailerlite, email
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.5.0
+Stable tag: 0.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,8 +31,9 @@ own WordPress site:
 * Provider select: MailerLite or Brevo via API, a generic webhook
   (JSON POST with optional HMAC-SHA256 signature — bridges to Zapier, Make,
   n8n or custom systems), or "local only" without an external service
-* Optional interest checkboxes: labels freely configurable, selections are
-  stored and mapped to configurable group IDs on MailerLite
+* Optional interest checkboxes: fully editable list (add/remove rows) —
+  selections are stored and mapped to configurable group IDs on MailerLite,
+  or sent as slug list to the webhook
 * Spam protection: honeypot + per-IP rate limit + optional reCAPTCHA v3
   (invisible); bots get a silent OK, never a confirmation mail
 * Token logic: SHA-256-hashed confirmation links with configurable TTL,
@@ -104,6 +105,10 @@ Divi 5 sites it picks up the Global Colors automatically.
 
 == Upgrade Notice ==
 
+= 0.6.0 =
+Interest checkboxes are now a fully editable list (add/remove rows in
+Settings). Existing int_* settings migrate automatically.
+
 = 0.5.0 =
 New provider "Webhook (generic)": confirmed subscribers are sent as a JSON
 POST to any URL — works with any service that has an HTTP endpoint
@@ -115,6 +120,13 @@ and cron migrate automatically. Existing `[skml_doi_form]` shortcodes and
 `skml/v1` confirmation links keep working (legacy aliases).
 
 == Changelog ==
+
+= 0.6.0 =
+* Interest checkboxes: the fixed 3-slot registry is replaced by a free
+  add/remove list in Settings — any number of interests with label +
+  optional MailerLite group ID
+* New rows derive their slug from the label; existing slugs stay stable
+* Legacy int_* options migrate transparently on read (no data loss)
 
 = 0.5.0 =
 * New provider "Webhook (generic)": JSON POST { event, email, interests,
