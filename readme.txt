@@ -1,0 +1,154 @@
+=== Diviskit Optin ===
+Contributors: saschakohler
+Tags: newsletter, gdpr, double opt-in, mailerlite, email
+Requires at least: 6.0
+Tested up to: 7.1
+Requires PHP: 7.4
+Stable tag: 0.5.0
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+Your own double opt-in for newsletter signups: branded confirmation mails
+from fully editable templates, GDPR consent proof, provider of your choice —
+MailerLite, Brevo or any webhook. Free, GPL, no account needed.
+
+== Description ==
+
+Diviskit Optin replaces the unstyled — or paid — double-opt-in mails of your
+email marketing provider with a confirmation flow that runs entirely on your
+own WordPress site:
+
+* Signup form via shortcode `[diviskit_optin_form]` (legacy alias:
+  `[skml_doi_form]`) — lean markup with its own minimal styling; on Divi 5
+  sites it automatically picks up the Global Colors (`var(--gcid-*)`)
+* Mail templates: create, edit, duplicate and activate complete HTML mails
+  in wp-admin — placeholders like `{{confirm_url}}` (required),
+  `{{heading}}`, `{{site_name}}` and more; four built-in designs (Standard,
+  Diviskit, Minimal, Dark), live preview and test send
+* Consent proof: per signup the exact consent wording shown is stored with
+  timestamp, IP and user agent — the standard evidence set for Art. 7 GDPR;
+  exportable as CSV
+* Provider select: MailerLite or Brevo via API, a generic webhook
+  (JSON POST with optional HMAC-SHA256 signature — bridges to Zapier, Make,
+  n8n or custom systems), or "local only" without an external service
+* Optional interest checkboxes: labels freely configurable, selections are
+  stored and mapped to configurable group IDs on MailerLite
+* Spam protection: honeypot + per-IP rate limit + optional reCAPTCHA v3
+  (invisible); bots get a silent OK, never a confirmation mail
+* Token logic: SHA-256-hashed confirmation links with configurable TTL,
+  stale signups expire automatically, failed provider syncs retry daily
+* Configurable redirects to your own thank-you/error pages
+* Runs on any theme — Divi 5 included, never required
+
+IMPORTANT for MailerLite: in Account settings → Subscribe settings keep
+"Double opt-in for API and integrations" OFF — the plugin performs the DOI
+itself, otherwise subscribers get a second, unstyled MailerLite mail.
+
+== Deutsch ==
+
+Eigenes Double-Opt-In für Newsletter: gebrandete deutsche
+Bestätigungsmails aus frei editierbaren Mail-Templates,
+Einwilligungsnachweis nach Art. 7 DSGVO (Consent-Text, Zeitstempel, IP,
+User-Agent), reCAPTCHA v3 + Honeypot. Bestätigte Subscriber werden an
+MailerLite, Brevo oder einen generischen Webhook übergeben — das
+kostenpflichtige/unstyled DOI der Anbieter wird umgangen. Läuft auf jedem
+WordPress-Theme, Divi ist keine Voraussetzung.
+
+== Installation ==
+
+1. Upload the plugin ZIP under Plugins → Add New → Upload, or copy the
+   `diviskit-optin` folder to `wp-content/plugins/`
+2. Activate the plugin
+3. Go to Diviskit → Optin (or the standalone "Diviskit Optin" menu) →
+   Settings: pick a provider (MailerLite, Brevo, Webhook or local only)
+   and enter credentials
+4. Place `[diviskit_optin_form]` where the form should appear — the
+   confirmation mail works with the default template right away
+
+== Frequently Asked Questions ==
+
+= Why not the provider's own double opt-in? =
+
+Provider DOIs are unstyled, usually English and sometimes a paid feature.
+Diviskit Optin sends your mail in your design and wording — the provider
+only sees the confirmed contact.
+
+= Do I need MailerLite or Brevo? =
+
+No. With "store locally" confirmed addresses stay in the WP table and
+export as CSV. For any other service there is the generic webhook.
+
+= Is the consent proof GDPR-compliant? =
+
+The plugin stores the shown consent text, timestamp, IP and user agent per
+signup — the usual evidence basis under Art. 7 GDPR. That does not replace
+legal advice on your wording.
+
+= What happens to installs of sk-mailerlite-doi? =
+
+They migrate automatically — options, subscriber table and cron.
+Confirmation links already sent and the old `[skml_doi_form]` shortcode
+keep working (legacy aliases).
+
+= Do I need Divi? =
+
+No. The form is a shortcode with its own styling and runs on any theme. On
+Divi 5 sites it picks up the Global Colors automatically.
+
+== Screenshots ==
+
+1. Opt-in form (frontend, adapts to Divi Global Colors)
+2. Settings — provider select with MailerLite, Brevo, generic webhook or local only
+3. Mail template editor with live preview
+4. Subscriber list with consent proof and CSV export
+
+== Upgrade Notice ==
+
+= 0.5.0 =
+New provider "Webhook (generic)": confirmed subscribers are sent as a JSON
+POST to any URL — works with any service that has an HTTP endpoint
+(Zapier, Make, n8n, Mailchimp bridge, custom APIs).
+
+= 0.4.0 =
+Rename from sk-mailerlite-doi → diviskit-optin. Settings, subscriber table
+and cron migrate automatically. Existing `[skml_doi_form]` shortcodes and
+`skml/v1` confirmation links keep working (legacy aliases).
+
+== Changelog ==
+
+= 0.5.0 =
+* New provider "Webhook (generic)": JSON POST { event, email, interests,
+  confirmed_at, site } to a configurable URL — 2xx counts as success,
+  failures are stored and retried daily like the API providers
+* Optional secret signs the body via HMAC-SHA256
+  (X-Dkopt-Signature header, GitHub style)
+* Connectivity check pings the hook with an { event: "ping" } event
+
+= 0.4.0 =
+* Rename: sk-mailerlite-doi → Diviskit Optin (slug diviskit-optin)
+* Admin in the Diviskit design: wordmark header, tab navigation
+  (Subscribers / Mail templates / Settings), menu under the Diviskit main
+  menu when the Diviskit Agent is active
+* Mail templates: create/edit/duplicate/activate multiple HTML templates
+  in the admin, placeholder system, live preview, test send, factory reset
+  for built-in templates
+* Four built-in designs: Standard (Vision yellow), Diviskit (brand blue),
+  Minimal, Dark
+* Migration: options, subscriber table (wp_skml_subscribers →
+  wp_diviskit_optin_subscribers) and cron hook are carried over
+* Legacy aliases: REST `skml/v1` + shortcode `[skml_doi_form]`
+* Redirect query arg is now `?optin=confirmed|error` (was `?skml=`)
+
+= 0.3.0 =
+* Optional interest checkboxes in the form (slug whitelist)
+* New `interests` column (DB version 2), admin list + CSV export
+* MailerLite: per-interest configurable group ID is set on sync in
+  addition to the base group
+
+= 0.2.0 =
+* Provider abstraction: MailerLite + Brevo + "local only"
+* reCAPTCHA v3 (replacing the v2 checkbox)
+* Configurable thank-you/error redirects
+
+= 0.1.0 =
+* Initial release.
