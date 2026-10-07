@@ -1,5 +1,5 @@
 === Diviskit Optin ===
-Contributors: saschakohler
+Contributors: diviskit
 Tags: newsletter, gdpr, double opt-in, mailerlite, email
 Requires at least: 6.0
 Tested up to: 7.1
@@ -54,6 +54,26 @@ User-Agent), reCAPTCHA v3 + Honeypot. Bestätigte Subscriber werden an
 MailerLite, Brevo oder einen generischen Webhook übergeben — das
 kostenpflichtige/unstyled DOI der Anbieter wird umgangen. Läuft auf jedem
 WordPress-Theme, Divi ist keine Voraussetzung.
+
+== External Services ==
+
+This plugin connects to external services only for the features you enable:
+
+* MailerLite API (`connect.mailerlite.com`): when MailerLite is selected as
+  provider, the confirmed subscriber's email address and configured group
+  IDs are sent via your API token.
+  https://www.mailerlite.com/legal/privacy-policy
+* Brevo API (`api.brevo.com`): when Brevo is selected as provider, the
+  confirmed subscriber's email address is sent via your API key.
+  https://www.brevo.com/legal/privacypolicy/
+* Google reCAPTCHA (`google.com/recaptcha`): when enabled, a script is
+  loaded on pages containing the form and the token is verified server-side.
+  https://policies.google.com/privacy — https://policies.google.com/terms
+* Webhook: when the generic webhook provider is selected, email, selected
+  interests, confirmation timestamp and site URL are POSTed as JSON to the
+  URL you configure (optionally signed via HMAC-SHA256).
+
+No data is transmitted anywhere when the "local only" provider is active.
 
 == Installation ==
 
