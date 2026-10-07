@@ -1,9 +1,11 @@
 <?php
 /**
  * Plugin Name: Diviskit Optin
+ * Plugin URI: https://github.com/SaschaKohler/diviskit-optin
  * Description: Eigenes Double-Opt-In für Newsletter-Signups: gebrandete deutsche Bestätigungsmail aus frei editierbaren Mail-Templates, DSGVO-Einwilligungsnachweis mit Consent-Text, reCAPTCHA v3 + Honeypot. Bestätigte Subscriber werden an den gewählten Provider (MailerLite, Brevo, generischer Webhook) übergeben — deren kostenpflichtiges DOI wird umgangen.
  * Version: 0.5.0
  * Author: Sascha Kohler
+ * Author URI: https://diviskit.com
  * License: GPLv2 or later
  * Text Domain: diviskit-optin
  * Requires at least: 6.0
