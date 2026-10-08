@@ -1,5 +1,5 @@
 /**
- * Diviskit Optin — form submit via REST (no jQuery).
+ * Skit Optin — form submit via REST (no jQuery).
  * reCAPTCHA v3: invisible, a fresh token is requested per submit
  * (grecaptcha.execute, action "subscribe") and verified server-side
  * incl. score + action.
@@ -8,26 +8,26 @@
   'use strict';
 
   function captchaToken() {
-    if (!(window.DKOPT && DKOPT.captcha && DKOPT.site && window.grecaptcha)) {
+    if (!(window.SKIT && SKIT.captcha && SKIT.site && window.grecaptcha)) {
       return Promise.resolve('');
     }
     return new Promise(function (resolve) {
       grecaptcha.ready(function () {
-        grecaptcha.execute(DKOPT.site, { action: 'subscribe' })
+        grecaptcha.execute(SKIT.site, { action: 'subscribe' })
           .then(resolve)
           .catch(function () { resolve(''); });
       });
     });
   }
 
-  document.querySelectorAll('[data-dkopt-form]').forEach(function (root) {
+  document.querySelectorAll('[data-skit-form]').forEach(function (root) {
     var form = root.querySelector('form');
     if (!form) return;
 
-    var body    = root.querySelector('.dkopt-body');
-    var done    = root.querySelector('.dkopt-done');
-    var btn     = form.querySelector('.dkopt-btn');
-    var msg     = form.querySelector('.dkopt-msg');
+    var body    = root.querySelector('.skit-body');
+    var done    = root.querySelector('.skit-done');
+    var btn     = form.querySelector('.skit-btn');
+    var msg     = form.querySelector('.skit-msg');
     var emailEl = form.querySelector('input[name="email"]');
 
     function fail(text) {
@@ -57,7 +57,7 @@
       btn.classList.add('is-loading');
 
       captchaToken().then(function (token) {
-        return fetch(DKOPT.rest, {
+        return fetch(SKIT.rest, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -78,11 +78,11 @@
             body.hidden = true;
             done.hidden = false;
           } else {
-            fail((r.data && r.data.message) ? r.data.message : DKOPT.error);
+            fail((r.data && r.data.message) ? r.data.message : SKIT.error);
           }
         })
         .catch(function () {
-          fail(DKOPT.error);
+          fail(SKIT.error);
         });
     });
   });

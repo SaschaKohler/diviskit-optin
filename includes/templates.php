@@ -1,12 +1,12 @@
 <?php
 /**
- * Diviskit Optin — mail templates.
+ * Skit Optin — mail templates.
  *
  * Templates are admin-authored HTML documents stored in a non-autoloaded
  * option. {{placeholders}} are replaced with escaped values at send time —
  * {{confirm_url}} is mandatory, without it the mail is not a DOI.
  *
- * Storage: option diviskit_optin_templates = id => { id, name, html, builtin? }.
+ * Storage: option skit_optin_templates = id => { id, name, html, builtin? }.
  * The builtin 'default' template only enters the option once edited;
  * deleting that entry restores the factory markup.
  */
@@ -23,26 +23,26 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Create the templates option with autoload off (WP <6.6 wants the 'no'
  * string, >=6.6 wants bool false).
  */
-function dkopt_templates_init() {
-    if ( false === get_option( DIVISKIT_OPTIN_TEMPLATES_OPTION ) ) {
+function skit_templates_init() {
+    if ( false === get_option( SKIT_OPTIN_TEMPLATES_OPTION ) ) {
         $autoload = version_compare( get_bloginfo( 'version' ), '6.6', '>=' ) ? false : 'no';
-        add_option( DIVISKIT_OPTIN_TEMPLATES_OPTION, array(), '', $autoload );
+        add_option( SKIT_OPTIN_TEMPLATES_OPTION, array(), '', $autoload );
     }
 }
 
 /**
  * Builtin template registry — a small selection of ready-made layouts.
- * They merge into dkopt_templates() and can be overridden per id by a
+ * They merge into skit_templates() and can be overridden per id by a
  * stored copy; "Werkseinstellung" removes that copy.
  *
  * @return array id => template
  */
-function dkopt_builtin_templates() {
+function skit_builtin_templates() {
     return array(
-        'default'  => array( 'id' => 'default',  'name' => 'Standard',  'builtin' => true, 'html' => dkopt_builtin_html_default() ),
-        'diviskit' => array( 'id' => 'diviskit', 'name' => 'Diviskit',  'builtin' => true, 'html' => dkopt_builtin_html_diviskit() ),
-        'minimal'  => array( 'id' => 'minimal',  'name' => 'Schlicht',  'builtin' => true, 'html' => dkopt_builtin_html_minimal() ),
-        'dark'     => array( 'id' => 'dark',     'name' => 'Dark',      'builtin' => true, 'html' => dkopt_builtin_html_dark() ),
+        'default'  => array( 'id' => 'default',  'name' => 'Standard',  'builtin' => true, 'html' => skit_builtin_html_default() ),
+        'skit' => array( 'id' => 'skit', 'name' => 'Skit',  'builtin' => true, 'html' => skit_builtin_html_skit() ),
+        'minimal'  => array( 'id' => 'minimal',  'name' => 'Schlicht',  'builtin' => true, 'html' => skit_builtin_html_minimal() ),
+        'dark'     => array( 'id' => 'dark',     'name' => 'Dark',      'builtin' => true, 'html' => skit_builtin_html_dark() ),
     );
 }
 
@@ -50,13 +50,13 @@ function dkopt_builtin_templates() {
  * @return array id => template. Builtin templates always present —
  * a stored copy with the same id overrides the builtin markup.
  */
-function dkopt_templates() {
-    $stored = get_option( DIVISKIT_OPTIN_TEMPLATES_OPTION, array() );
+function skit_templates() {
+    $stored = get_option( SKIT_OPTIN_TEMPLATES_OPTION, array() );
     if ( ! is_array( $stored ) ) {
         $stored = array();
     }
     $out = array();
-    foreach ( dkopt_builtin_templates() as $id => $tpl ) {
+    foreach ( skit_builtin_templates() as $id => $tpl ) {
         $out[ $id ] = isset( $stored[ $id ] ) && is_array( $stored[ $id ] ) ? $stored[ $id ] : $tpl;
         $out[ $id ]['builtin'] = true;
     }
@@ -68,27 +68,27 @@ function dkopt_templates() {
     return $out;
 }
 
-function dkopt_template( $id ) {
-    $templates = dkopt_templates();
+function skit_template( $id ) {
+    $templates = skit_templates();
     return isset( $templates[ $id ] ) ? $templates[ $id ] : null;
 }
 
 /**
  * @return array the active template, falling back to 'default'.
  */
-function dkopt_active_template() {
-    $tpl = dkopt_template( (string) dkopt_opt( 'active_template' ) );
-    return $tpl ? $tpl : dkopt_template( 'default' );
+function skit_active_template() {
+    $tpl = skit_template( (string) skit_opt( 'active_template' ) );
+    return $tpl ? $tpl : skit_template( 'default' );
 }
 
 /**
  * Persist the template map. Keeps the no-autoload flag on first write.
  */
-function dkopt_templates_store( $templates ) {
-    if ( false === get_option( DIVISKIT_OPTIN_TEMPLATES_OPTION ) ) {
-        dkopt_templates_init();
+function skit_templates_store( $templates ) {
+    if ( false === get_option( SKIT_OPTIN_TEMPLATES_OPTION ) ) {
+        skit_templates_init();
     }
-    update_option( DIVISKIT_OPTIN_TEMPLATES_OPTION, $templates );
+    update_option( SKIT_OPTIN_TEMPLATES_OPTION, $templates );
 }
 
 /**
@@ -99,18 +99,18 @@ function dkopt_templates_store( $templates ) {
  * @param string $html Full HTML document, must contain {{confirm_url}}.
  * @return string|WP_Error template id
  */
-function dkopt_save_template( $id, $name, $html ) {
+function skit_save_template( $id, $name, $html ) {
     $name = trim( sanitize_text_field( $name ) );
     $html = trim( (string) $html );
 
     if ( '' === $name ) {
-        return new WP_Error( 'dkopt_tpl_name', 'Bitte gib dem Template einen Namen.' );
+        return new WP_Error( 'skit_tpl_name', 'Bitte gib dem Template einen Namen.' );
     }
     if ( false === strpos( $html, '{{confirm_url}}' ) ) {
-        return new WP_Error( 'dkopt_tpl_confirm', 'Das Template muss den Platzhalter {{confirm_url}} enthalten — ohne Bestätigungslink ist es kein Double-Opt-In.' );
+        return new WP_Error( 'skit_tpl_confirm', 'Das Template muss den Platzhalter {{confirm_url}} enthalten — ohne Bestätigungslink ist es kein Double-Opt-In.' );
     }
 
-    $templates = dkopt_templates();
+    $templates = skit_templates();
     $id        = sanitize_key( $id );
     if ( '' === $id || ! isset( $templates[ $id ] ) ) {
         $id = 'tpl_' . substr( md5( uniqid( (string) wp_rand(), true ) ), 0, 8 );
@@ -122,22 +122,22 @@ function dkopt_save_template( $id, $name, $html ) {
         'html'    => $html,
         'builtin' => ! empty( $templates[ $id ]['builtin'] ),
     );
-    dkopt_templates_store( $templates );
+    skit_templates_store( $templates );
     return $id;
 }
 
-function dkopt_delete_template( $id ) {
-    $templates = dkopt_templates();
+function skit_delete_template( $id ) {
+    $templates = skit_templates();
     if ( ! isset( $templates[ $id ] ) || ! empty( $templates[ $id ]['builtin'] ) ) {
         return false;
     }
     unset( $templates[ $id ] );
-    dkopt_templates_store( $templates );
+    skit_templates_store( $templates );
 
-    if ( (string) dkopt_opt( 'active_template' ) === (string) $id ) {
-        $o                     = get_option( DIVISKIT_OPTIN_OPTION, array() );
+    if ( (string) skit_opt( 'active_template' ) === (string) $id ) {
+        $o                     = get_option( SKIT_OPTIN_OPTION, array() );
         $o['active_template']  = 'default';
-        update_option( DIVISKIT_OPTIN_OPTION, $o );
+        update_option( SKIT_OPTIN_OPTION, $o );
     }
     return true;
 }
@@ -145,37 +145,37 @@ function dkopt_delete_template( $id ) {
 /**
  * @return string|false new template id
  */
-function dkopt_duplicate_template( $id ) {
-    $src = dkopt_template( $id );
+function skit_duplicate_template( $id ) {
+    $src = skit_template( $id );
     if ( ! $src ) {
         return false;
     }
-    return dkopt_save_template( '', $src['name'] . ' (Kopie)', $src['html'] );
+    return skit_save_template( '', $src['name'] . ' (Kopie)', $src['html'] );
 }
 
 /**
  * Drop the stored override of a builtin template — back to factory markup.
  */
-function dkopt_reset_template( $id ) {
-    $templates = dkopt_templates();
+function skit_reset_template( $id ) {
+    $templates = skit_templates();
     if ( empty( $templates[ $id ]['builtin'] ) ) {
         return false;
     }
-    $stored = get_option( DIVISKIT_OPTIN_TEMPLATES_OPTION, array() );
+    $stored = get_option( SKIT_OPTIN_TEMPLATES_OPTION, array() );
     if ( is_array( $stored ) && isset( $stored[ $id ] ) ) {
         unset( $stored[ $id ] );
-        dkopt_templates_store( $stored );
+        skit_templates_store( $stored );
     }
     return true;
 }
 
-function dkopt_activate_template( $id ) {
-    if ( null === dkopt_template( $id ) ) {
+function skit_activate_template( $id ) {
+    if ( null === skit_template( $id ) ) {
         return false;
     }
-    $o                    = get_option( DIVISKIT_OPTIN_OPTION, array() );
+    $o                    = get_option( SKIT_OPTIN_OPTION, array() );
     $o['active_template'] = sanitize_key( $id );
-    update_option( DIVISKIT_OPTIN_OPTION, $o );
+    update_option( SKIT_OPTIN_OPTION, $o );
     return true;
 }
 
@@ -187,7 +187,7 @@ function dkopt_activate_template( $id ) {
  * Placeholder map for the admin help box.
  * @return array placeholder => description
  */
-function dkopt_template_placeholders() {
+function skit_template_placeholders() {
     return array(
         '{{confirm_url}}'  => 'Bestätigungslink (Pflicht — das DOI selbst)',
         '{{subject}}'      => 'Betreff aus den Einstellungen',
@@ -207,8 +207,8 @@ function dkopt_template_placeholders() {
 /**
  * @return array placeholder => escaped replacement
  */
-function dkopt_template_vars( $email, $confirm_url ) {
-    $o = dkopt_options();
+function skit_template_vars( $email, $confirm_url ) {
+    $o = skit_options();
     return array(
         '{{confirm_url}}' => esc_url( $confirm_url ),
         '{{subject}}'     => esc_html( $o['mail_subject'] ),
@@ -226,19 +226,72 @@ function dkopt_template_vars( $email, $confirm_url ) {
 }
 
 /**
- * Admin-authored HTML, stored raw (manage_options context — same trust as
- * the hardcoded template it replaces). Placeholders escape their values.
+ * wp_kses allowlist for mail template HTML — used when the acting admin
+ * lacks the unfiltered_html capability (e.g. multisite). Covers full
+ * table-based mail documents incl. <head>/<style>; the 'style' attribute
+ * is run through safecss_filter_attr() by wp_kses.
+ *
+ * @return array tag => allowed attributes
  */
-function dkopt_render_template( $html, $email, $confirm_url ) {
-    return strtr( $html, dkopt_template_vars( $email, $confirm_url ) );
+function skit_allowed_mail_html() {
+    $style = array( 'style' => true, 'class' => true, 'id' => true, 'align' => true, 'width' => true );
+    return array(
+        'html'       => array( 'lang' => true, 'dir' => true, 'xmlns' => true ),
+        'head'       => array(),
+        'title'      => array(),
+        'meta'       => array( 'charset' => true, 'name' => true, 'content' => true, 'http-equiv' => true ),
+        'style'      => array( 'type' => true, 'media' => true ),
+        'body'       => $style,
+        'table'      => array_merge( $style, array( 'role' => true, 'cellpadding' => true, 'cellspacing' => true, 'border' => true, 'bgcolor' => true, 'height' => true, 'valign' => true ) ),
+        'thead'      => $style,
+        'tbody'      => $style,
+        'tfoot'      => $style,
+        'tr'         => array_merge( $style, array( 'bgcolor' => true, 'valign' => true ) ),
+        'td'         => array_merge( $style, array( 'colspan' => true, 'rowspan' => true, 'bgcolor' => true, 'height' => true, 'valign' => true ) ),
+        'th'         => array_merge( $style, array( 'colspan' => true, 'rowspan' => true, 'bgcolor' => true, 'height' => true, 'valign' => true, 'scope' => true ) ),
+        'a'          => array_merge( $style, array( 'href' => true, 'target' => true, 'rel' => true, 'title' => true ) ),
+        'img'        => array_merge( $style, array( 'src' => true, 'alt' => true, 'height' => true, 'border' => true ) ),
+        'p'          => $style,
+        'div'        => $style,
+        'span'       => $style,
+        'h1'         => $style,
+        'h2'         => $style,
+        'h3'         => $style,
+        'h4'         => $style,
+        'h5'         => $style,
+        'h6'         => $style,
+        'ul'         => $style,
+        'ol'         => $style,
+        'li'         => $style,
+        'br'         => $style,
+        'hr'         => $style,
+        'strong'     => $style,
+        'em'         => $style,
+        'b'          => $style,
+        'i'          => $style,
+        'u'          => $style,
+        'small'      => $style,
+        'center'     => $style,
+        'blockquote' => $style,
+        'pre'        => $style,
+        'code'       => $style,
+    );
+}
+
+/**
+ * Admin-authored HTML, stored raw when the admin has unfiltered_html,
+ * kses-filtered otherwise. Placeholders escape their values.
+ */
+function skit_render_template( $html, $email, $confirm_url ) {
+    return strtr( $html, skit_template_vars( $email, $confirm_url ) );
 }
 
 /**
  * Factory markup for a builtin template. Used for the new-template
  * prefill and the "Werkseinstellung" reset.
  */
-function dkopt_factory_template_html( $id = 'default' ) {
-    $builtins = dkopt_builtin_templates();
+function skit_factory_template_html( $id = 'default' ) {
+    $builtins = skit_builtin_templates();
     return isset( $builtins[ $id ] ) ? $builtins[ $id ]['html'] : $builtins['default']['html'];
 }
 
@@ -246,7 +299,7 @@ function dkopt_factory_template_html( $id = 'default' ) {
  * The previous hardcoded Vision layout, placeholders instead of inline
  * option reads.
  */
-function dkopt_builtin_html_default() {
+function skit_builtin_html_default() {
     return '<!DOCTYPE html>
 <html lang="de">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -304,9 +357,9 @@ function dkopt_builtin_html_default() {
 }
 
 /**
- * Diviskit brand look — primary #3854f4, rounded card, clean sans.
+ * Skit brand look — primary #3854f4, rounded card, clean sans.
  */
-function dkopt_builtin_html_diviskit() {
+function skit_builtin_html_skit() {
     return '<!DOCTYPE html>
 <html lang="de">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -366,7 +419,7 @@ function dkopt_builtin_html_diviskit() {
 /**
  * Schlicht — plain text feel: no card, serif body, outlined button.
  */
-function dkopt_builtin_html_minimal() {
+function skit_builtin_html_minimal() {
     return '<!DOCTYPE html>
 <html lang="de">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -412,7 +465,7 @@ function dkopt_builtin_html_minimal() {
 /**
  * Dark — Vision dark card: #0f1115 page, #17191a card, yellow accent.
  */
-function dkopt_builtin_html_dark() {
+function skit_builtin_html_dark() {
     return '<!DOCTYPE html>
 <html lang="de">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>

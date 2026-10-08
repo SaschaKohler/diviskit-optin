@@ -1,10 +1,10 @@
-=== Diviskit Optin ===
+=== Skit Optin ===
 Contributors: diviskit
 Tags: newsletter, gdpr, double opt-in, email
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.6.0
+Stable tag: 0.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,17 +12,18 @@ Branded double-opt-in confirmation mails, GDPR consent proof, MailerLite/Brevo/w
 
 == Description ==
 
-Diviskit Optin replaces the unstyled — or paid — double-opt-in mails of your
+Skit Optin replaces the unstyled — or paid — double-opt-in mails of your
 email marketing provider with a confirmation flow that runs entirely on your
 own WordPress site:
 
-* Signup form via shortcode `[diviskit_optin_form]` (legacy alias:
-  `[skml_doi_form]`) — lean markup with its own minimal styling; on Divi 5
-  sites it automatically picks up the Global Colors (`var(--gcid-*)`)
+* Signup form via shortcode `[skit_optin_form]` (legacy aliases:
+  `[diviskit_optin_form]`, `[skml_doi_form]`) — lean markup with its own
+  minimal styling; on Divi 5 sites it automatically picks up the Global
+  Colors (`var(--gcid-*)`)
 * Mail templates: create, edit, duplicate and activate complete HTML mails
   in wp-admin — placeholders like `{{confirm_url}}` (required),
   `{{heading}}`, `{{site_name}}` and more; four built-in designs (Standard,
-  Diviskit, Minimal, Dark), live preview and test send
+  Skit, Minimal, Dark), live preview and test send
 * Consent proof: per signup the exact consent wording shown is stored with
   timestamp, IP and user agent — the standard evidence set for Art. 7 GDPR;
   exportable as CSV
@@ -76,12 +77,11 @@ No data is transmitted anywhere when the "local only" provider is active.
 == Installation ==
 
 1. Upload the plugin ZIP under Plugins → Add New → Upload, or copy the
-   `diviskit-optin` folder to `wp-content/plugins/`
+   `skit-optin` folder to `wp-content/plugins/`
 2. Activate the plugin
-3. Go to Diviskit → Optin (or the standalone "Diviskit Optin" menu) →
-   Settings: pick a provider (MailerLite, Brevo, Webhook or local only)
-   and enter credentials
-4. Place `[diviskit_optin_form]` where the form should appear — the
+3. Go to the "Skit Optin" menu → Settings: pick a provider (MailerLite,
+   Brevo, Webhook or local only) and enter credentials
+4. Place `[skit_optin_form]` where the form should appear — the
    confirmation mail works with the default template right away
 
 == Frequently Asked Questions ==
@@ -89,7 +89,7 @@ No data is transmitted anywhere when the "local only" provider is active.
 = Why not the provider's own double opt-in? =
 
 Provider DOIs are unstyled, usually English and sometimes a paid feature.
-Diviskit Optin sends your mail in your design and wording — the provider
+Skit Optin sends your mail in your design and wording — the provider
 only sees the confirmed contact.
 
 = Do I need MailerLite or Brevo? =
@@ -103,11 +103,12 @@ The plugin stores the shown consent text, timestamp, IP and user agent per
 signup — the usual evidence basis under Art. 7 GDPR. That does not replace
 legal advice on your wording.
 
-= What happens to installs of sk-mailerlite-doi? =
+= What happens to installs of sk-mailerlite-doi or diviskit-optin? =
 
-They migrate automatically — options, subscriber table and cron.
-Confirmation links already sent and the old `[skml_doi_form]` shortcode
-keep working (legacy aliases).
+Both migrate automatically — options, mail templates, subscriber table
+and cron. Confirmation links already sent and the old shortcodes
+(`[diviskit_optin_form]`, `[skml_doi_form]`) keep working as legacy
+aliases.
 
 = Do I need Divi? =
 
@@ -122,6 +123,11 @@ Divi 5 sites it picks up the Global Colors automatically.
 4. Subscriber list with consent proof and CSV export
 
 == Upgrade Notice ==
+
+= 0.7.0 =
+Rename diviskit-optin → skit-optin. Settings, templates, subscriber table,
+cron and already-sent confirmation links migrate/keep working
+automatically.
 
 = 0.6.0 =
 Interest checkboxes are now a fully editable list (add/remove rows in
@@ -139,6 +145,18 @@ and cron migrate automatically. Existing `[skml_doi_form]` shortcodes and
 
 == Changelog ==
 
+= 0.7.0 =
+* Rename: Diviskit Optin → Skit Optin (slug skit-optin) — new plugin
+  identity for the WordPress.org directory
+* Migration: options, templates option, subscriber table
+  (wp_diviskit_optin_subscribers → wp_skit_optin_subscribers) and cron
+  hook are carried over
+* Legacy aliases kept: REST `diviskit-optin/v1` + `skml/v1`, shortcodes
+  `[diviskit_optin_form]` + `[skml_doi_form]`
+* Security: mail template HTML now requires the unfiltered_html
+  capability; without it the markup is filtered through wp_kses with a
+  mail-document allowlist
+
 = 0.6.0 =
 * Interest checkboxes: the fixed 3-slot registry is replaced by a free
   add/remove list in Settings — any number of interests with label +
@@ -151,19 +169,19 @@ and cron migrate automatically. Existing `[skml_doi_form]` shortcodes and
   confirmed_at, site } to a configurable URL — 2xx counts as success,
   failures are stored and retried daily like the API providers
 * Optional secret signs the body via HMAC-SHA256
-  (X-Dkopt-Signature header, GitHub style)
+  (X-Skit-Signature header, GitHub style)
 * Connectivity check pings the hook with an { event: "ping" } event
 
 = 0.4.0 =
 * Rename: sk-mailerlite-doi → Diviskit Optin (slug diviskit-optin)
-* Admin in the Diviskit design: wordmark header, tab navigation
-  (Subscribers / Mail templates / Settings), menu under the Diviskit main
-  menu when the Diviskit Agent is active
+* Admin redesign: wordmark header, tab navigation
+  (Subscribers / Mail templates / Settings), submenu under the Diviskit
+  Agent menu when that plugin is active
 * Mail templates: create/edit/duplicate/activate multiple HTML templates
   in the admin, placeholder system, live preview, test send, factory reset
   for built-in templates
-* Four built-in designs: Standard (Vision yellow), Diviskit (brand blue),
-  Minimal, Dark
+* Four built-in designs: Standard (Vision yellow), brand blue, Minimal,
+  Dark
 * Migration: options, subscriber table (wp_skml_subscribers →
   wp_diviskit_optin_subscribers) and cron hook are carried over
 * Legacy aliases: REST `skml/v1` + shortcode `[skml_doi_form]`

@@ -1,57 +1,57 @@
 /**
- * Diviskit Optin — admin styles (on top of the shared diviskit-admin.css).
+ * Skit Optin — admin styles (on top of the shared skit-admin.css).
  */
 
 /* --- template editor: editor + live preview side by side ---------- */
-.diviskit-admin .dkopt-editor-grid {
+.skit-admin .skit-editor-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 24px;
   align-items: start;
 }
-.diviskit-admin .dkopt-tpl-textarea {
+.skit-admin .skit-tpl-textarea {
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
   font-size: 12px;
   line-height: 1.55;
   min-height: 480px;
-  border-radius: var(--diviskit-radius);
+  border-radius: var(--skit-radius);
 }
-.diviskit-admin .dkopt-preview {
+.skit-admin .skit-preview {
   position: sticky;
   top: 32px;
 }
-.diviskit-admin .dkopt-preview-frame {
+.skit-admin .skit-preview-frame {
   width: 100%;
   height: 640px;
-  border: 1px solid var(--diviskit-border);
-  border-radius: var(--diviskit-radius);
+  border: 1px solid var(--skit-border);
+  border-radius: var(--skit-radius);
   background: #fff;
 }
-.diviskit-admin .dkopt-placeholders {
+.skit-admin .skit-placeholders {
   margin: 10px 0 16px;
 }
-.diviskit-admin .dkopt-placeholders > summary {
+.skit-admin .skit-placeholders > summary {
   cursor: pointer;
   padding: 6px 0;
 }
 
 /* --- interests repeater ------------------------------------------- */
-.diviskit-admin .dkopt-int-row {
+.skit-admin .skit-int-row {
   display: flex;
   gap: 8px;
   align-items: center;
   margin-bottom: 8px;
 }
-.diviskit-admin .dkopt-int-row .regular-text {
+.skit-admin .skit-int-row .regular-text {
   flex: 0 1 280px;
 }
-.diviskit-admin .dkopt-int-del {
+.skit-admin .skit-int-del {
   flex: 0 0 auto;
   line-height: 1;
 }
 
 @media (max-width: 1100px) {
-  .diviskit-admin .dkopt-editor-grid { grid-template-columns: minmax(0, 1fr); }
-  .diviskit-admin .dkopt-preview { position: static; }
-  .diviskit-admin .dkopt-preview-frame { height: 480px; }
+  .skit-admin .skit-editor-grid { grid-template-columns: minmax(0, 1fr); }
+  .skit-admin .skit-preview { position: static; }
+  .skit-admin .skit-preview-frame { height: 480px; }
 }

@@ -1,13 +1,13 @@
 <?php
 /**
- * Diviskit Optin — options, defaults, sanitization.
+ * Skit Optin — options, defaults, sanitization.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-function dkopt_defaults() {
+function skit_defaults() {
     return array(
         // Provider
         'provider'             => 'mailerlite',
@@ -50,7 +50,7 @@ function dkopt_defaults() {
         'mail_button'          => 'Anmeldung bestätigen',
         'mail_footer'          => 'Du hast dich nicht angemeldet? Dann kannst du diese E-Mail einfach ignorieren — es wird nichts weiter passieren.',
 
-        // Aktives Mail-Template (ID aus dkopt_templates())
+        // Aktives Mail-Template (ID aus skit_templates())
         'active_template'      => 'default',
 
         // Rechtsseiten (erscheinen in Mail + Formular)
@@ -69,7 +69,7 @@ function dkopt_defaults() {
 /**
  * Legacy interest field map (<=0.5.0): fixed slug => option keys.
  */
-function dkopt_legacy_interest_keys() {
+function skit_legacy_interest_keys() {
     return array(
         'sk_consent' => array( 'label_key' => 'int_sk_consent_label', 'group_key' => 'int_sk_consent_group' ),
         'vendokit'   => array( 'label_key' => 'int_vendokit_label',   'group_key' => 'int_vendokit_group' ),
@@ -77,14 +77,14 @@ function dkopt_legacy_interest_keys() {
     );
 }
 
-function dkopt_options() {
-    $stored = get_option( DIVISKIT_OPTIN_OPTION, array() );
-    $o      = wp_parse_args( $stored, dkopt_defaults() );
+function skit_options() {
+    $stored = get_option( SKIT_OPTIN_OPTION, array() );
+    $o      = wp_parse_args( $stored, skit_defaults() );
 
     // Migration <=0.5.0: feste int_*-Felder → interests-Liste.
     if ( ! isset( $stored['interests'] ) ) {
         $migrated = array();
-        foreach ( dkopt_legacy_interest_keys() as $slug => $keys ) {
+        foreach ( skit_legacy_interest_keys() as $slug => $keys ) {
             $label = trim( (string) ( isset( $o[ $keys['label_key'] ] ) ? $o[ $keys['label_key'] ] : '' ) );
             if ( '' === $label ) {
                 continue;
@@ -96,15 +96,15 @@ function dkopt_options() {
             );
         }
         $o['interests'] = $migrated;
-        foreach ( dkopt_legacy_interest_keys() as $keys ) {
+        foreach ( skit_legacy_interest_keys() as $keys ) {
             unset( $o[ $keys['label_key'] ], $o[ $keys['group_key'] ] );
         }
     }
     return $o;
 }
 
-function dkopt_opt( $key ) {
-    $o = dkopt_options();
+function skit_opt( $key ) {
+    $o = skit_options();
     return isset( $o[ $key ] ) ? $o[ $key ] : '';
 }
 
@@ -112,8 +112,8 @@ function dkopt_opt( $key ) {
  * reCAPTCHA is active only when the toggle is on AND both keys are set —
  * lets you keep prod keys stored while disabling the check on DDEV.
  */
-function dkopt_recaptcha_active() {
-    $o = dkopt_options();
+function skit_recaptcha_active() {
+    $o = skit_options();
     return ! empty( $o['recaptcha_enabled'] )
         && '' !== trim( (string) $o['recaptcha_site_key'] )
         && '' !== trim( (string) $o['recaptcha_secret_key'] );
@@ -126,9 +126,9 @@ function dkopt_recaptcha_active() {
  *
  * @return array slug => array( 'label' => string, 'group' => string )
  */
-function dkopt_interests() {
+function skit_interests() {
     $out = array();
-    foreach ( (array) dkopt_opt( 'interests' ) as $it ) {
+    foreach ( (array) skit_opt( 'interests' ) as $it ) {
         if ( ! is_array( $it ) ) {
             continue;
         }
@@ -148,34 +148,34 @@ function dkopt_interests() {
     return $out;
 }
 
-function dkopt_interests_active() {
-    $o = dkopt_options();
-    return ! empty( $o['interests_enabled'] ) && array() !== dkopt_interests();
+function skit_interests_active() {
+    $o = skit_options();
+    return ! empty( $o['interests_enabled'] ) && array() !== skit_interests();
 }
 
 /**
  * Filtert eine Nutzer-Eingabe auf die bekannten Interessen-Slugs.
  * @return string[]
  */
-function dkopt_sanitize_interests( $in ) {
+function skit_sanitize_interests( $in ) {
     if ( ! is_array( $in ) ) {
         return array();
     }
-    $known = array_keys( dkopt_interests() );
+    $known = array_keys( skit_interests() );
     return array_values( array_intersect( $known, array_map( 'sanitize_key', $in ) ) );
 }
 
 /**
  * Whitelist sanitize for the single options array.
  */
-function dkopt_sanitize_options( $in ) {
-    $out = dkopt_options();
+function skit_sanitize_options( $in ) {
+    $out = skit_options();
     if ( ! is_array( $in ) ) {
         return $out;
     }
 
     $provider = isset( $in['provider'] ) ? sanitize_key( $in['provider'] ) : '';
-    if ( isset( dkopt_providers()[ $provider ] ) ) {
+    if ( isset( skit_providers()[ $provider ] ) ) {
         $out['provider'] = $provider;
     }
 
@@ -194,7 +194,7 @@ function dkopt_sanitize_options( $in ) {
         }
     }
 
-    if ( isset( $in['active_template'] ) && null !== dkopt_template( sanitize_key( $in['active_template'] ) ) ) {
+    if ( isset( $in['active_template'] ) && null !== skit_template( sanitize_key( $in['active_template'] ) ) ) {
         $out['active_template'] = sanitize_key( $in['active_template'] );
     }
 

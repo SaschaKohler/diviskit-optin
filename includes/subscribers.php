@@ -1,6 +1,6 @@
 <?php
 /**
- * Diviskit Optin — subscriber storage (Einwilligungsnachweis, DSGVO Art. 7).
+ * Skit Optin — subscriber storage (Einwilligungsnachweis, DSGVO Art. 7).
  *
  * One row per email. Pending rows carry a sha256 token hash (the raw token
  * only ever exists in the confirmation URL). Stored proof: consent wording
@@ -14,14 +14,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // phpcs:disable WordPress.DB.DirectDatabaseQuery -- custom DOI table; WP has no CRUD API for custom tables.
 
-function dkopt_table() {
+function skit_table() {
     global $wpdb;
-    return $wpdb->prefix . 'diviskit_optin_subscribers';
+    return $wpdb->prefix . 'skit_optin_subscribers';
 }
 
-function dkopt_create_table() {
+function skit_create_table() {
     global $wpdb;
-    $table   = dkopt_table();
+    $table   = skit_table();
     $charset = $wpdb->get_charset_collate();
 
     $sql = "CREATE TABLE {$table} (
@@ -46,24 +46,24 @@ function dkopt_create_table() {
 
     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
     dbDelta( $sql );
-    update_option( 'diviskit_optin_db_version', DIVISKIT_OPTIN_DB_VERSION );
+    update_option( 'skit_optin_db_version', SKIT_OPTIN_DB_VERSION );
 }
 
-function dkopt_client_ip() {
+function skit_client_ip() {
     return sanitize_text_field( wp_unslash( isset( $_SERVER['REMOTE_ADDR'] ) ? $_SERVER['REMOTE_ADDR'] : '' ) );
 }
 
-function dkopt_find_by_email( $email ) {
+function skit_find_by_email( $email ) {
     global $wpdb;
-    $table = dkopt_table();
+    $table = skit_table();
     return $wpdb->get_row( $wpdb->prepare(
         "SELECT * FROM %i WHERE email = %s", $table, $email
     ), ARRAY_A );
 }
 
-function dkopt_find_by_token( $token ) {
+function skit_find_by_token( $token ) {
     global $wpdb;
-    $table = dkopt_table();
+    $table = skit_table();
     return $wpdb->get_row( $wpdb->prepare(
         "SELECT * FROM %i WHERE token_hash = %s", $table, hash( 'sha256', $token )
     ), ARRAY_A );
@@ -74,48 +74,48 @@ function dkopt_find_by_token( $token ) {
  * email rotates the token and rewrites the consent proof.
  * Returns array( 'id' => int, 'token' => raw token ).
  */
-function dkopt_upsert_pending( $email, $consent_text, $interests = array() ) {
+function skit_upsert_pending( $email, $consent_text, $interests = array() ) {
     global $wpdb;
     $token   = bin2hex( random_bytes( 32 ) );
-    $ttl     = max( 1, (int) dkopt_opt( 'token_ttl' ) );
+    $ttl     = max( 1, (int) skit_opt( 'token_ttl' ) );
     $now     = current_time( 'mysql' );
     $expires = gmdate( 'Y-m-d H:i:s', current_time( 'timestamp' ) + $ttl * HOUR_IN_SECONDS );
 
-    $wpdb->replace( dkopt_table(), array(
+    $wpdb->replace( skit_table(), array(
         'email'        => $email,
         'status'       => 'pending',
         'token_hash'   => hash( 'sha256', $token ),
         'consent_text' => $consent_text,
-        'ip_address'   => dkopt_client_ip(),
+        'ip_address'   => skit_client_ip(),
         'user_agent'   => substr( sanitize_text_field( wp_unslash( isset( $_SERVER['HTTP_USER_AGENT'] ) ? $_SERVER['HTTP_USER_AGENT'] : '' ) ), 0, 255 ),
         'created_at'   => $now,
         'confirmed_at' => null,
         'expires_at'   => $expires,
         'ml_synced_at' => null,
         'ml_error'     => '',
-        'interests'    => implode( ',', dkopt_sanitize_interests( $interests ) ),
+        'interests'    => implode( ',', skit_sanitize_interests( $interests ) ),
     ) );
 
     return array( 'id' => (int) $wpdb->insert_id, 'token' => $token );
 }
 
-function dkopt_confirm_row( $id ) {
+function skit_confirm_row( $id ) {
     global $wpdb;
-    $wpdb->update( dkopt_table(), array(
+    $wpdb->update( skit_table(), array(
         'status'       => 'confirmed',
         'confirmed_at' => current_time( 'mysql' ),
         'token_hash'   => '',
     ), array( 'id' => (int) $id ) );
 }
 
-function dkopt_mark_sync_result( $id, $result ) {
+function skit_mark_sync_result( $id, $result ) {
     global $wpdb;
     if ( is_wp_error( $result ) ) {
-        $wpdb->update( dkopt_table(), array(
+        $wpdb->update( skit_table(), array(
             'ml_error' => substr( $result->get_error_message(), 0, 255 ),
         ), array( 'id' => (int) $id ) );
     } else {
-        $wpdb->update( dkopt_table(), array(
+        $wpdb->update( skit_table(), array(
             'ml_synced_at' => current_time( 'mysql' ),
             'ml_error'     => '',
         ), array( 'id' => (int) $id ) );
@@ -126,9 +126,9 @@ function dkopt_mark_sync_result( $id, $result ) {
  * Daily cron: pending rows past their TTL are marked expired
  * (kept as rows — an expired attempt is still part of the audit trail).
  */
-function dkopt_expire_pending() {
+function skit_expire_pending() {
     global $wpdb;
-    $table = dkopt_table();
+    $table = skit_table();
     if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
         return;
     }
@@ -143,9 +143,9 @@ function dkopt_expire_pending() {
  * call failed (or the key was missing). Bounded so a dead API doesn't
  * hammer itself forever — gives up after 7 days.
  */
-function dkopt_retry_provider_sync() {
+function skit_retry_provider_sync() {
     global $wpdb;
-    $table = dkopt_table();
+    $table = skit_table();
     if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
         return;
     }
@@ -159,13 +159,13 @@ function dkopt_retry_provider_sync() {
 
     foreach ( $rows as $row ) {
         $interests = '' !== (string) $row['interests'] ? explode( ',', $row['interests'] ) : array();
-        dkopt_mark_sync_result( $row['id'], dkopt_push_subscriber( $row['email'], $interests ) );
+        skit_mark_sync_result( $row['id'], skit_push_subscriber( $row['email'], $interests ) );
     }
 }
 
-function dkopt_subscriber_counts() {
+function skit_subscriber_counts() {
     global $wpdb;
-    $table = dkopt_table();
+    $table = skit_table();
     $empty = array( 'pending' => 0, 'confirmed' => 0, 'expired' => 0 );
     if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
         return $empty;
@@ -182,9 +182,9 @@ function dkopt_subscriber_counts() {
     return $counts;
 }
 
-function dkopt_subscriber_entries( $limit = 100 ) {
+function skit_subscriber_entries( $limit = 100 ) {
     global $wpdb;
-    $table = dkopt_table();
+    $table = skit_table();
     if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
         return array();
     }
